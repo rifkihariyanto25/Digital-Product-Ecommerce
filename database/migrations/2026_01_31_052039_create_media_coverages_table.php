@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('terms_conditions', function (Blueprint $table) {
+        Schema::create('media_coverages', function (Blueprint $table) {
             $table->id();
-            $table->longText('content')->nullable();
+            $table->string('logo');
+            $table->string('name');
+            $table->string('url')->nullable();
+            $table->integer('order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
@@ -24,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('terms_conditions');
+        Schema::dropIfExists('media_coverages');
     }
 };

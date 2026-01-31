@@ -21,7 +21,13 @@ class SettingResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Management Store';
+    protected static ?string $navigationLabel = 'Pengaturan Umum';
+
+    protected static ?string $modelLabel = 'Pengaturan';
+
+    protected static ?string $pluralModelLabel = 'Pengaturan';
+
+    protected static string | UnitEnum | null $navigationGroup = 'Homepage';
 
     protected static ?int $navigationSort = 1;
 

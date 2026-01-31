@@ -21,9 +21,15 @@ class QnaSectionResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-question-mark-circle';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Management Website';
+    protected static ?string $navigationLabel = 'FAQ Homepage';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?string $modelLabel = 'FAQ';
+
+    protected static ?string $pluralModelLabel = 'FAQ';
+
+    protected static string | UnitEnum | null $navigationGroup = 'Homepage';
+
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'name';
 
