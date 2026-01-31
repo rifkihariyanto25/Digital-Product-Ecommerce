@@ -53,11 +53,11 @@
 
 @section('content')
 @php
-    // Decode JSON fields once at the top
-    $gallery = is_string($product->gallery) ? json_decode($product->gallery, true) : $product->gallery;
-    $testimonials = is_string($product->testimonials) ? json_decode($product->testimonials, true) : $product->testimonials;
-    $faqs = is_string($product->faqs) ? json_decode($product->faqs, true) : $product->faqs;
-    $bonuses = is_string($product->bonuses) ? json_decode($product->bonuses, true) : $product->bonuses;
+    // Decode JSON fields once at the top (or use directly if already array from model cast)
+    $gallery = is_array($product->gallery) ? $product->gallery : (is_string($product->gallery) ? json_decode($product->gallery, true) : []);
+    $testimonials = is_array($product->testimonials) ? $product->testimonials : (is_string($product->testimonials) ? json_decode($product->testimonials, true) : []);
+    $faqs = is_array($product->faqs) ? $product->faqs : (is_string($product->faqs) ? json_decode($product->faqs, true) : []);
+    $bonuses = is_array($product->bonuses) ? $product->bonuses : (is_string($product->bonuses) ? json_decode($product->bonuses, true) : []);
     $bonusValue = ($bonuses && is_array($bonuses) && count($bonuses) > 0) ? count($bonuses) * 100000 : 0;
 @endphp
 
@@ -81,8 +81,15 @@
         voucherAmount: 0,
         selectedVoucherCode: '',
         availableVouchers: [
-            { code: 'PENGGUNABARU', amount: 50000, label: 'Potongan khusus pengguna baru', best: true },
-            { code: 'DISKON10', amount: 10000, label: 'Potongan Rp 10.000 untuk semua produk', best: false }
+            @foreach($vouchers as $index => $voucher)
+            { 
+                code: '{{ $voucher->kode_voucher }}', 
+                amount: {{ $voucher->nilai }}, 
+                label: '{{ $voucher->nama_voucher }}', 
+                type: '{{ $voucher->tipe }}',
+                best: {{ $index === 0 ? 'true' : 'false' }} 
+            }{{ $loop->last ? '' : ',' }}
+            @endforeach
         ],
 
         paymentMethod: 'qris', 
@@ -170,7 +177,16 @@
         get productDiscount() { return this.normalPrice - this.basePrice; },
         get totalSavings() { return this.productDiscount + this.bonusValue + this.voucherAmount; },
         formatRupiah(number) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number); },
-        selectVoucher(voucher) { this.selectedVoucherCode = voucher.code; this.voucherAmount = voucher.amount; },
+        selectVoucher(voucher) { 
+            this.selectedVoucherCode = voucher.code; 
+            if (voucher.type === 'persentase') {
+                // Hitung persentase dari base price
+                this.voucherAmount = Math.round(this.basePrice * (voucher.amount / 100));
+            } else {
+                // Nominal langsung
+                this.voucherAmount = voucher.amount;
+            }
+        },
         selectPayment(channel, methodType) { this.selectedPaymentChannel = channel; this.paymentMethod = methodType; },
         startTimer() { setInterval(() => { if (this.timerTime > 0) { this.timerTime--; let h = Math.floor(this.timerTime / 3600).toString().padStart(2, '0'); let m = Math.floor((this.timerTime % 3600) / 60).toString().padStart(2, '0'); let s = (this.timerTime % 60).toString().padStart(2, '0'); this.timerDisplay = `${h} : ${m} : ${s}`; } }, 1000); },
         copyText(text) { const cleanText = text.toString().replace(/[^0-9]/g, ''); navigator.clipboard.writeText(cleanText).then(() => { this.showCopyToast = true; setTimeout(() => { this.showCopyToast = false; }, 3000); }); },
@@ -348,23 +364,21 @@
                     @endif
 
                     {{-- FAQ --}}
-                    @if($faqs && is_array($faqs) && count($faqs) > 0)
-                    <div x-data="{ active: 0, faqs: {!! json_encode(array_map(function($faq) {
-                        return ['q' => $faq['question'], 'a' => $faq['answer']];
-                    }, $faqs)) !!} }" class="bg-white rounded-[2rem] border border-slate-100 shadow-soft overflow-hidden">
+                    @if($generalFaqs && $generalFaqs->count() > 0)
+                    <div x-data="{ active: 0 }" class="bg-white rounded-[2rem] border border-slate-100 shadow-soft overflow-hidden">
                         <div class="p-6 border-b border-slate-50 bg-slate-50/50">
                             <h3 class="font-heading text-lg font-bold text-slate-900 flex items-center gap-2"><i class="ri-question-answer-line text-iosBlue"></i> Pertanyaan Umum</h3>
                         </div>
                         <div class="divide-y divide-slate-100">
-                            <template x-for="(item, index) in faqs" :key="index">
+                            @foreach($generalFaqs as $index => $faq)
                                 <div class="group">
-                                    <button @click="active === index ? active = null : active = index" class="w-full flex items-center justify-between p-5 text-left font-semibold text-slate-800 hover:bg-blue-50/30 transition-colors">
-                                        <span x-text="item.q" class="text-sm"></span>
-                                        <i class="fa-solid fa-chevron-down transition-transform duration-300 text-slate-400 text-xs" :class="{'rotate-180 text-iosBlue': active === index}"></i>
+                                    <button @click="active === {{ $index }} ? active = null : active = {{ $index }}" class="w-full flex items-center justify-between p-5 text-left font-semibold text-slate-800 hover:bg-blue-50/30 transition-colors">
+                                        <span class="text-sm">{{ $faq->question }}</span>
+                                        <i class="fa-solid fa-chevron-down transition-transform duration-300 text-slate-400 text-xs" :class="{'rotate-180 text-iosBlue': active === {{ $index }}}"></i>
                                     </button>
-                                    <div x-show="active === index" class="px-5 pb-5 text-sm text-slate-500 leading-relaxed bg-blue-50/10"><p x-text="item.a"></p></div>
+                                    <div x-show="active === {{ $index }}" class="px-5 pb-5 text-sm text-slate-500 leading-relaxed bg-blue-50/10"><p>{{ $faq->answer }}</p></div>
                                 </div>
-                            </template>
+                            @endforeach
                         </div>
                     </div>
                     @endif
@@ -421,7 +435,10 @@
                                              :class="selectedVoucherCode === voucher.code ? 'border-iosBlue bg-blue-50/50 ring-1 ring-iosBlue shadow-md scale-[1.02]' : 'border-slate-200 bg-white hover:border-blue-200'">
                                             <div x-show="voucher.best" class="absolute -top-2.5 -right-2 z-20"><div class="bg-gradient-to-r from-pink-500 to-red-500 text-white text-[8px] font-bold px-2 py-1 rounded-full shadow-md animate-bounce">🔥 BEST DEAL</div></div>
                                             <div class="absolute inset-0 bg-pattern opacity-10 pointer-events-none rounded-xl" x-show="selectedVoucherCode === voucher.code"></div>
-                                            <div class="w-[70px] flex flex-col items-center justify-center p-1 text-center relative z-10 border-r border-dashed" :class="selectedVoucherCode === voucher.code ? 'border-iosBlue/30' : 'border-slate-200'"><span class="text-[8px] font-bold text-slate-400 uppercase">HEMAT</span><span class="text-xs font-black text-slate-800" x-text="formatRupiah(voucher.amount).replace(',00', '').replace('Rp', '')"></span></div>
+                                            <div class="w-[70px] flex flex-col items-center justify-center p-1 text-center relative z-10 border-r border-dashed" :class="selectedVoucherCode === voucher.code ? 'border-iosBlue/30' : 'border-slate-200'">
+                                                <span class="text-[8px] font-bold text-slate-400 uppercase">HEMAT</span>
+                                                <span class="text-xs font-black text-slate-800" x-text="voucher.type === 'persentase' ? voucher.amount + '%' : formatRupiah(voucher.amount).replace(',00', '').replace('Rp', '')"></span>
+                                            </div>
                                             <div class="flex-1 px-3 flex items-center justify-between relative z-10"><div><h5 class="font-bold text-slate-900 text-xs" x-text="voucher.code"></h5><p class="text-[9px] text-slate-500 truncate w-32" x-text="voucher.label"></p></div><div class="w-5 h-5 rounded-full border flex items-center justify-center transition-all" :class="selectedVoucherCode === voucher.code ? 'bg-iosBlue border-iosBlue' : 'border-slate-300 bg-white'"><i x-show="selectedVoucherCode === voucher.code" class="ri-check-line text-white text-xs"></i></div></div>
                                         </div>
                                     </template>

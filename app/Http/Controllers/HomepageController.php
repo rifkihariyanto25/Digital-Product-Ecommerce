@@ -8,6 +8,7 @@ use App\Models\Testimonial;
 use App\Models\QnaSection;
 use App\Models\InformationCard;
 use App\Models\Product;
+use App\Models\Voucher;
 use Illuminate\Http\Request;
 
 class HomepageController extends Controller
@@ -62,7 +63,16 @@ class HomepageController extends Controller
     {
         $product = Product::with('category')->findOrFail($id);
         $setting = Setting::first();
+        $generalFaqs = QnaSection::orderBy('id')->get();
         
-        return view('detail-produk', compact('product', 'setting'));
+        // Get active vouchers
+        $vouchers = Voucher::where('is_active', true)
+            ->where('berlaku_dari', '<=', now())
+            ->where('berlaku_sampai', '>=', now())
+            ->where('jumlah_terpakai', '<', \DB::raw('batas_penggunaan'))
+            ->orderByDesc('nilai')
+            ->get();
+        
+        return view('detail-produk', compact('product', 'setting', 'generalFaqs', 'vouchers'));
     }
 }
