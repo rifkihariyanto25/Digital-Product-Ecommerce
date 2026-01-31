@@ -50,7 +50,11 @@
                 @endif
                 <div>
                     <h1 class="font-heading font-extrabold text-xl text-slate-900 leading-none">
-                        {{ $setting->nama_toko ?? 'Template' }}<span class="text-iosPurple">{{ $setting ? '' : 'nesia' }}</span>.
+                        @if($setting && $setting->nama_toko)
+                            {{ $setting->nama_toko }}
+                        @else
+                            Template<span class="text-iosPurple">nesia</span>.
+                        @endif
                     </h1>
                 </div>
             </div>
@@ -118,25 +122,25 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div v-for="(prod, i) in filteredPopular" :key="prod.name" class="group bg-white rounded-[2rem] p-4 shadow-soft hover:shadow-lg border border-transparent hover:border-blue-100 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+                <a v-for="(prod, i) in filteredPopular" :key="prod.name" :href="`/product/${prod.id}`" class="group bg-white rounded-[2rem] p-4 shadow-soft hover:shadow-lg border border-transparent hover:border-blue-100 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
                     <div class="relative aspect-square rounded-[1.5rem] overflow-hidden mb-4 bg-gray-100">
                         <img :src="prod.image" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" alt="Cover">
-                        <div class="absolute top-3 right-3 bg-white/80 backdrop-blur-md text-slate-900 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                        <div v-if="prod.rating" class="absolute top-3 right-3 bg-white/80 backdrop-blur-md text-slate-900 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
                             <i class="fa-solid fa-star text-yellow-400"></i> @{{ prod.rating }}
                         </div>
                     </div>
                     <h4 class="font-bold text-slate-800 text-lg leading-snug mb-1 line-clamp-2 group-hover:text-iosBlue">@{{ prod.name }}</h4>
-                    <p class="text-xs text-gray-400 mb-4">@{{ prod.sold }} Terjual</p>
+                    <p v-if="prod.sold" class="text-xs text-gray-400 mb-4">@{{ prod.sold }} Terjual</p>
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-xs text-gray-400 line-through">Rp @{{ formatPrice(prod.oldPrice) }}</div>
+                            <div v-if="prod.oldPrice" class="text-xs text-gray-400 line-through">Rp @{{ formatPrice(prod.oldPrice) }}</div>
                             <div class="text-lg font-bold text-iosBlue">Rp @{{ formatPrice(prod.price) }}</div>
                         </div>
                         <button class="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-md hover:bg-iosBlue transition-colors">
                             <i class="fa-solid fa-plus"></i>
                         </button>
                     </div>
-                </div>
+                </a>
             </div>
         </section>
 
@@ -171,7 +175,7 @@
                 <h3 class="font-heading text-2xl font-bold text-slate-900">Produk Terbaru</h3>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
-                <div v-for="(prod, i) in filteredNew" :key="prod.name" class="bg-white rounded-[2rem] p-3 shadow-soft border border-transparent hover:border-blue-100 transition-all cursor-pointer group">
+                <a v-for="(prod, i) in filteredNew" :key="prod.name" :href="`/product/${prod.id}`" class="bg-white rounded-[2rem] p-3 shadow-soft border border-transparent hover:border-blue-100 transition-all cursor-pointer group">
                     <div class="relative aspect-square rounded-[1.5rem] overflow-hidden mb-3 bg-gray-100">
                         <div class="absolute top-2 left-2 bg-iosBlue text-white text-[10px] font-bold px-2 py-1 rounded-md z-10">NEW</div>
                         <img :src="prod.image" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
@@ -179,13 +183,16 @@
                     <div class="px-1">
                         <h4 class="font-bold text-slate-800 text-sm md:text-base leading-snug mb-2 line-clamp-2 h-10">@{{ prod.name }}</h4>
                         <div class="flex items-center justify-between">
-                            <span class="font-bold text-iosBlue">Rp @{{ formatPrice(prod.price) }}</span>
+                            <div>
+                                <div v-if="prod.oldPrice" class="text-[10px] text-gray-400 line-through">Rp @{{ formatPrice(prod.oldPrice) }}</div>
+                                <span class="font-bold text-iosBlue">Rp @{{ formatPrice(prod.price) }}</span>
+                            </div>
                             <button class="w-8 h-8 rounded-full bg-blue-50 text-iosBlue hover:bg-iosBlue hover:text-white flex items-center justify-center transition-colors">
                                 <i class="fa-solid fa-plus text-sm"></i>
                             </button>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
         </section>
 
@@ -436,20 +443,28 @@
             const whatsappLink = "{{ $setting && $setting->nomor_whatsapp_owner ? 'https://wa.me/' . $setting->nomor_whatsapp_owner : 'https://wa.me/628123456789' }}"; 
             const activeFaq = ref(0); 
 
-            // 1. DATA PRODUK
-            const popularProducts = ref([
-                { name: 'Paket Lengkap S.O.P HRD Perusahaan', price: 299000, oldPrice: 500000, rating: 4.9, sold: '1.2k', image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=400&h=400' },
-                { name: 'Template Laporan Keuangan Excel Otomatis', price: 149000, oldPrice: 250000, rating: 4.8, sold: '890', image: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&q=80&w=400&h=400' },
-                { name: 'S.O.P Pelayanan Customer Service', price: 99000, oldPrice: 150000, rating: 4.7, sold: '550', image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=400&h=400' },
-                { name: 'Dokumen Legalitas Pendirian PT', price: 499000, oldPrice: 750000, rating: 5.0, sold: '300', image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400&h=400' },
-            ]);
+            // 1. DATA PRODUK (dari backend)
+            const popularProducts = ref({!! json_encode($popularProducts->map(function($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->discount_price ?: $product->price,
+                    'oldPrice' => $product->discount_price ? $product->price : null,
+                    'rating' => 4.8,
+                    'sold' => '100+',
+                    'image' => $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/400',
+                ];
+            })->values()) !!});
 
-            const newProducts = ref([
-                { name: 'Form Cuti & Lembur Otomatis', price: 50000, image: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=300&h=300' },
-                { name: 'S.O.P Digital Marketing 2024', price: 199000, image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=300&h=300' },
-                { name: 'Template KPI Karyawan', price: 89000, image: 'https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?auto=format&fit=crop&q=80&w=300&h=300' },
-                { name: 'S.O.P Kebersihan Kantor', price: 75000, image: 'https://images.unsplash.com/photo-1581578731117-104f2a863a30?auto=format&fit=crop&q=80&w=300&h=300' },
-            ]);
+            const newProducts = ref({!! json_encode($newProducts->map(function($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->discount_price ?: $product->price,
+                    'oldPrice' => $product->discount_price ? $product->price : null,
+                    'image' => $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/300',
+                ];
+            })->values()) !!});
 
             // 2. REALTIME SEARCH LOGIC (COMPUTED)
             const filteredPopular = computed(() => {

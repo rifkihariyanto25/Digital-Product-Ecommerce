@@ -17,6 +17,7 @@ class InformationCardForm
                 FileUpload::make('icon')
                     ->label('Icon/Logo')
                     ->image()
+                    ->disk('public')
                     ->directory('information-cards')
                     ->required()
                     ->columnSpanFull(),

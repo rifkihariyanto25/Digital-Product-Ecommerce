@@ -22,6 +22,7 @@ class SettingForm
                             FileUpload::make('logo')
                                 ->label('Logo Toko')
                                 ->image()
+                                ->disk('public')
                                 ->directory('settings')
                                 ->helperText('Upload logo toko Anda (format: jpg, png)'),
                             

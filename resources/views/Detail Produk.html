@@ -1,65 +1,99 @@
-@extends('layouts.app')
-
-@section('title', $product->name . ' - Templatenesia Official')
-
-@push('styles')
-<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-<style>
-    body { background-color: #F5F5F7; color: #1D1D1F; -webkit-font-smoothing: antialiased; }
-    [x-cloak] { display: none !important; }
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Checkout - Templatenesia Official</title>
     
-    .glass-effect {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-    }
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
     
-    html { scroll-padding-bottom: 140px; scroll-padding-top: 100px; }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    .bg-pattern {
-        background-image: radial-gradient(#007AFF 1px, transparent 1px);
-        background-size: 8px 8px;
-    }
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Plus Jakarta Sans', 'sans-serif']
+                    },
+                    colors: {
+                        iosBlue: '#007AFF',
+                        iosPurple: '#9333ea',
+                        iosDark: '#1D1D1F',
+                        iosBg: '#F5F5F7',
+                    },
+                    boxShadow: {
+                        'soft': '0 8px 30px rgba(0,0,0,0.04)',
+                        'glow': '0 0 20px rgba(0, 122, 255, 0.3)',
+                    },
+                    animation: {
+                        'pop-in': 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                    },
+                    keyframes: {
+                        popIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
-    @keyframes bouncy-button {
-        0%, 100% { transform: translateY(0); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        50% { transform: translateY(-3px); box-shadow: 0 15px 20px -5px rgba(0, 122, 255, 0.3); }
-    }
+    <style>
+        body { background-color: #F5F5F7; color: #1D1D1F; -webkit-font-smoothing: antialiased; }
+        [x-cloak] { display: none !important; }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        html { scroll-padding-bottom: 140px; scroll-padding-top: 100px; }
 
-    .btn-bouncy {
-        background: linear-gradient(135deg, #1D1D1F 0%, #007AFF 100%);
-        background-size: 200% 200%;
-        animation: bouncy-button 3s infinite ease-in-out;
-        border: 1px solid rgba(255,255,255,0.2);
-    }
-    
-    @keyframes arrow-jump {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-4px); }
-    }
+        .bg-pattern {
+            background-image: radial-gradient(#007AFF 1px, transparent 1px);
+            background-size: 8px 8px;
+        }
 
-    .icon-jump {
-        display: inline-block;
-        animation: arrow-jump 1s infinite ease-in-out; 
-    }
+        /* 1. ANIMASI TOMBOL (Naik Turun + Shadow) */
+        @keyframes bouncy-button {
+            0%, 100% { transform: translateY(0); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+            50% { transform: translateY(-3px); box-shadow: 0 15px 20px -5px rgba(0, 122, 255, 0.3); }
+        }
 
-    .btn-bouncy:hover {
-        animation-play-state: paused;
-        transform: translateY(-2px);
-        filter: brightness(1.1);
-    }
-</style>
-@endpush
+        .btn-bouncy {
+            background: linear-gradient(135deg, #1D1D1F 0%, #007AFF 100%);
+            background-size: 200% 200%;
+            animation: bouncy-button 3s infinite ease-in-out;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        /* 2. ANIMASI ICON PANAH (Lincah) */
+        @keyframes arrow-jump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
 
-@section('content')
-@php
-    // Decode JSON fields once at the top
-    $gallery = is_string($product->gallery) ? json_decode($product->gallery, true) : $product->gallery;
-    $testimonials = is_string($product->testimonials) ? json_decode($product->testimonials, true) : $product->testimonials;
-    $faqs = is_string($product->faqs) ? json_decode($product->faqs, true) : $product->faqs;
-    $bonuses = is_string($product->bonuses) ? json_decode($product->bonuses, true) : $product->bonuses;
-    $bonusValue = ($bonuses && is_array($bonuses) && count($bonuses) > 0) ? count($bonuses) * 100000 : 0;
-@endphp
+        .icon-jump {
+            display: inline-block;
+            animation: arrow-jump 1s infinite ease-in-out; 
+        }
+
+        .btn-bouncy:hover {
+            animation-play-state: paused;
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
 
 <body class="pb-40 lg:pb-32"> 
 
@@ -69,15 +103,18 @@
         showCopyToast: false,
         showErrorModal: false,
         
-        productName: '{{ $product->name }}',
-        productImage: '{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/400' }}',
-        
-        basePrice: {{ $product->discount_price ?: $product->price }},   
-        normalPrice: {{ $product->price }}, 
-        bonusValue: {{ $bonusValue }}, 
+        // DATA PRODUK
+        productName: 'Paket Lengkap S.O.P HRD',
+        productImage: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800&h=1000', 
+
+        // DATA HARGA
+        basePrice: 149000,   
+        normalPrice: 499000, 
+        bonusValue: 1298000, 
         adminFee: 0,
         uniqueCode: Math.floor(Math.random() * 899) + 100,
 
+        // DATA VOUCHER
         voucherAmount: 0,
         selectedVoucherCode: '',
         availableVouchers: [
@@ -85,24 +122,13 @@
             { code: 'DISKON10', amount: 10000, label: 'Potongan Rp 10.000 untuk semua produk', best: false }
         ],
 
+        // DATA PEMBAYARAN
         paymentMethod: 'qris', 
         selectedPaymentChannel: 'qris_all', 
         
+        // FORM DATA
         formData: { name: '', email: '', phone: '', agreed: true },
         formErrors: { name: false, email: false, phone: false },
-
-        slides: [
-            @if($product->image)
-            { type: 'image', src: '{{ asset('storage/' . $product->image) }}' },
-            @endif
-            @if($gallery && is_array($gallery))
-                @foreach($gallery as $galleryImage)
-                { type: 'image', src: '{{ asset('storage/' . $galleryImage) }}' },
-                @endforeach
-            @endif
-        ],
-        active: 0,
-        autoplay: null,
 
         init() {
             this.startTimer();
@@ -110,13 +136,7 @@
             if(bestVoucher) { this.selectVoucher(bestVoucher); }
             setTimeout(() => this.triggerPopup(), 3000); 
             setInterval(() => this.triggerPopup(), 60000);
-            if(this.slides.length > 0) this.startAutoplay();
         },
-
-        startAutoplay() { this.autoplay = setInterval(() => { this.next(); }, 3000); },
-        stopAutoplay() { clearInterval(this.autoplay); },
-        next() { this.active = (this.active === this.slides.length - 1) ? 0 : this.active + 1; },
-        prev() { this.active = (this.active === 0) ? this.slides.length - 1 : this.active - 1; },
 
         sanitizeName() {
             let val = this.formData.name.replace(/[^a-zA-Z\s]/g, '');
@@ -181,12 +201,11 @@
 
         <header class="fixed top-0 w-full z-50 glass-effect transition-all duration-300 shadow-sm">
             <div class="max-w-screen-xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-                <a href="{{ route('homepage') }}" class="flex items-center gap-3 cursor-pointer group">
-                    @if($setting && $setting->logo_header_atas)
-                    <img src="{{ asset('storage/' . $setting->logo_header_atas) }}" class="w-10 h-10 rounded-lg object-cover shadow-sm group-hover:scale-105 transition-transform" alt="Logo">
-                    @endif
+                <a href="Homepage.html" class="flex items-center gap-3 cursor-pointer group">
+                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjRzyTdfjkBugSP3Ew_vmkaeMQKl0XnZVR83kFV0LtKJXC4gVF_WTGPS57iCampIjdlGU09l_Ct0hw_2Tx51GiHj5uWr6fTYqzJirf8qpAKhwW0AsM-pYcam74_l25KpFvShEYQdkJ-UnuJQsuiP7qa7Ek85k0MWaF0X0pHGmJZ2imL8IQK9ip5M9s2sW0/s16000/Templatenesia%20Logo.jpg" 
+                         class="w-10 h-10 rounded-lg object-cover shadow-sm group-hover:scale-105 transition-transform" alt="Templatenesia Logo">
                     <div>
-                        <h1 class="font-heading font-extrabold text-xl text-slate-900 leading-none">{{ $setting->judul_header_atas ?? 'Templatenesia' }}</h1>
+                        <h1 class="font-heading font-extrabold text-xl text-slate-900 leading-none">Template<span class="text-iosPurple">nesia</span>.</h1>
                     </div>
                 </a>
 
@@ -254,15 +273,36 @@
 
                 <div class="lg:col-span-7 space-y-10 animate-fade-in-up delay-100 pb-10">
                     
-                    {{-- Gallery Slider --}}
-                    <div @mouseenter="stopAutoplay()" @mouseleave="startAutoplay()" class="bg-white p-3 rounded-[2rem] shadow-soft border border-slate-100 relative group overflow-hidden w-full">
+                    <div x-data="{ 
+                            slides: [
+                                { type: 'image', src: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800&h=1000' },
+                                { type: 'video', id: 'tgbNymZ7vqY' }, 
+                                { type: 'image', src: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&q=80&w=1000&h=1000' }
+                            ],
+                            active: 0,
+                            autoplay: null,
+                            init() { this.startAutoplay(); },
+                            startAutoplay() { this.autoplay = setInterval(() => { this.next(); }, 3000); },
+                            stopAutoplay() { clearInterval(this.autoplay); },
+                            next() { this.active = (this.active === this.slides.length - 1) ? 0 : this.active + 1; },
+                            prev() { this.active = (this.active === 0) ? this.slides.length - 1 : this.active - 1; },
+                            goTo(index) { this.active = index; }
+                         }" 
+                         @mouseenter="stopAutoplay()" 
+                         @mouseleave="startAutoplay()"
+                         class="bg-white p-3 rounded-[2rem] shadow-soft border border-slate-100 relative group overflow-hidden w-full">
                         
                         <div class="relative w-full h-[400px] lg:h-[550px] overflow-hidden rounded-[1.5rem] bg-gray-50 border border-slate-50">
                              <template x-for="(slide, index) in slides" :key="index">
                                 <div x-show="active === index" 
                                      x-transition:enter="transition ease-out duration-700" x-transition:enter-start="opacity-0 scale-105" x-transition:enter-end="opacity-100 scale-100" 
                                      class="absolute inset-0 w-full h-full flex items-center justify-center p-2">
-                                    <img :src="slide.src" class="w-full h-full object-contain drop-shadow-sm rounded-lg">
+                                    <template x-if="slide.type === 'image'">
+                                        <img :src="slide.src" class="w-full h-full object-contain drop-shadow-sm rounded-lg">
+                                    </template>
+                                    <template x-if="slide.type === 'video'">
+                                        <iframe class="w-full h-full absolute inset-0 rounded-lg" :src="'https://www.youtube.com/embed/' + slide.id" frameborder="0" allowfullscreen></iframe>
+                                    </template>
                                 </div>
                             </template>
                             <button @click="prev()" class="absolute top-1/2 left-4 -translate-y-1/2 z-30 bg-white/90 hover:bg-white text-slate-800 w-10 h-10 flex items-center justify-center rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100 transform hover:scale-110"><i class="fa-solid fa-chevron-left"></i></button>
@@ -270,11 +310,10 @@
                         </div>
                     </div>
 
-                    {{-- Deskripsi Produk --}}
                     <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-soft">
                         <h3 class="font-heading text-xl font-bold text-slate-900 mb-6 border-l-4 border-iosBlue pl-4">Tentang Produk Ini</h3>
                         <div class="prose prose-slate max-w-none text-slate-500 leading-relaxed mb-6">
-                            <p>{{ $product->description }}</p>
+                            <p>Produk ini didesain khusus untuk membantu Anda mempercepat proses bisnis tanpa ribet teknis. Menggunakan standar <span class="bg-blue-50 text-iosBlue px-1 rounded font-bold">iOS Clean Design</span>.</p>
                         </div>
 
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -295,19 +334,26 @@
                                 <h4 class="font-bold text-slate-900 text-sm mb-1">Support 24/7</h4><p class="text-[10px] text-slate-400">Bantuan Admin</p>
                             </div>
                         </div>
+
+                        <div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100/50">
+                            <h4 class="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wide">Manfaat untuk Bisnis Anda:</h4>
+                            <ul class="space-y-3">
+                                <li class="flex items-start gap-3"><i class="ri-checkbox-circle-fill text-green-500 text-xl mt-0.5"></i><span class="text-slate-700 font-medium">Meningkatkan Omset & Profitabilitas</span></li>
+                                <li class="flex items-start gap-3"><i class="ri-checkbox-circle-fill text-green-500 text-xl mt-0.5"></i><span class="text-slate-700 font-medium">Membuat Performa Kinerja Tim Lebih Terstruktur & Mandiri</span></li>
+                                <li class="flex items-start gap-3"><i class="ri-checkbox-circle-fill text-green-500 text-xl mt-0.5"></i><span class="text-slate-700 font-medium">Bisnis Terlihat Lebih Professional & Siap Skalasi</span></li>
+                                <li class="flex items-start gap-3"><i class="ri-checkbox-circle-fill text-green-500 text-xl mt-0.5"></i><span class="text-slate-700 font-medium">Meningkatkan Efisiensi Waktu (Owner tidak perlu mengawasi 24 jam)</span></li>
+                            </ul>
+                        </div>
                     </div>
 
-                    {{-- Testimoni --}}
-                    @if($testimonials && is_array($testimonials) && count($testimonials) > 0)
                     <div x-data="{
-                            testimonials: {!! json_encode(array_map(function($testi) {
-                                return [
-                                    'name' => $testi['name'],
-                                    'role' => $testi['position'] ?? 'Customer',
-                                    'text' => $testi['content'],
-                                    'initial' => substr($testi['name'], 0, 1)
-                                ];
-                            }, $testimonials)) !!},
+                            testimonials: [
+                                { name: 'Raka Ardhi', role: 'Freelancer', text: 'Gila sih, materinya daging semua. Langsung saya praktekkan dan closing klien pertama dalam 3 hari!', initial: 'RA' },
+                                { name: 'Diana Puspita', role: 'Olshop Owner', text: 'Tampilan ebooknya enak dibaca, dan bonus template invoice-nya kepake banget buat bisnis saya.', initial: 'DP' },
+                                { name: 'Bayu Saputra', role: 'Entrepreneur', text: 'Awalnya ragu, tapi supportnya juara. Ada kendala dikit langsung dibantu tim support sampai beres.', initial: 'BS' },
+                                { name: 'Sarah Wijaya', role: 'HRD Manager', text: 'Sangat membantu merapikan SOP di kantor kami. Formatnya mudah diedit dan sangat professional.', initial: 'SW' },
+                                { name: 'Reza Pratama', role: 'Content Creator', text: 'Investasi terbaik bulan ini. Bonusnya saja sudah seharga produknya. Recommended banget!', initial: 'RP' }
+                            ],
                             current: 0,
                             autoplay: null,
                             init() { this.startAutoplay(); },
@@ -345,13 +391,13 @@
                             </template>
                         </div>
                     </div>
-                    @endif
 
-                    {{-- FAQ --}}
-                    @if($faqs && is_array($faqs) && count($faqs) > 0)
-                    <div x-data="{ active: 0, faqs: {!! json_encode(array_map(function($faq) {
-                        return ['q' => $faq['question'], 'a' => $faq['answer']];
-                    }, $faqs)) !!} }" class="bg-white rounded-[2rem] border border-slate-100 shadow-soft overflow-hidden">
+                    <div x-data="{ active: 0, faqs: [ 
+                        { q: 'Apakah file bisa diedit?', a: 'Ya, 100% editable. Anda akan mendapatkan format Microsoft Word, Excel, dan PDF yang tidak dikunci.' },
+                        { q: 'Bagaimana cara akses produknya?', a: 'Link download akan dikirim otomatis ke WhatsApp dan Email Anda detik itu juga setelah pembayaran berhasil.' },
+                        { q: 'Apakah pembayaran sekali bayar?', a: 'Betul! Cukup bayar sekali saja (One-time payment) untuk akses seumur hidup.' },
+                        { q: 'Apakah ada garansi uang kembali?', a: 'Tentu. Jika file rusak atau tidak sesuai deskripsi, kami kembalikan uang Anda 100%.' }
+                    ] }" class="bg-white rounded-[2rem] border border-slate-100 shadow-soft overflow-hidden">
                         <div class="p-6 border-b border-slate-50 bg-slate-50/50">
                             <h3 class="font-heading text-lg font-bold text-slate-900 flex items-center gap-2"><i class="ri-question-answer-line text-iosBlue"></i> Pertanyaan Umum</h3>
                         </div>
@@ -367,10 +413,7 @@
                             </template>
                         </div>
                     </div>
-                    @endif
 
-                    {{-- Bonus --}}
-                    @if($bonuses && is_array($bonuses) && count($bonuses) > 0)
                     <div class="bg-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-2xl">
                         <div class="absolute top-0 right-0 w-80 h-80 bg-iosBlue opacity-20 rounded-full blur-[80px] pointer-events-none animate-pulse"></div>
                         <div class="relative z-10">
@@ -379,23 +422,21 @@
                                 <h3 class="font-heading text-xl font-bold">Bonus Spesial Hari Ini</h3>
                             </div>
                             <div class="space-y-3 mb-8">
-                                @foreach($bonuses as $bonus)
-                                <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5 hover:bg-white/10 transition-colors">
-                                    <div class="flex items-center gap-3"><i class="ri-checkbox-circle-fill text-green-400 text-lg"></i><span class="font-medium text-slate-200 text-sm">{{ $bonus['title'] }}</span></div>
-                                    <span class="text-[9px] font-bold bg-white/10 text-white px-2 py-1 rounded">GRATIS</span>
-                                </div>
-                                @endforeach
+                                <template x-for="item in ['E-Book Masterclass', 'Video Tutorial HD', 'Template Kalender', 'Cheatsheet Copy', 'Akses Private Group']">
+                                    <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5 hover:bg-white/10 transition-colors">
+                                        <div class="flex items-center gap-3"><i class="ri-checkbox-circle-fill text-green-400 text-lg"></i><span class="font-medium text-slate-200 text-sm" x-text="item"></span></div>
+                                        <span class="text-[9px] font-bold bg-white/10 text-white px-2 py-1 rounded">GRATIS</span>
+                                    </div>
+                                </template>
                             </div>
                             <div class="bg-gradient-to-r from-iosBlue to-iosPurple rounded-xl p-5 text-center shadow-lg">
                                 <p class="text-white/80 text-[10px] uppercase tracking-wider mb-1">HEMAT HINGGA</p>
-                                <div class="flex items-center justify-center gap-3"><span class="text-white/50 line-through text-sm">Rp {{ number_format($bonusValue, 0, ',', '.') }}</span><span class="text-2xl font-extrabold text-white">GRATIS HARI INI</span></div>
+                                <div class="flex items-center justify-center gap-3"><span class="text-white/50 line-through text-sm">Rp 1.298.000</span><span class="text-2xl font-extrabold text-white">GRATIS HARI INI</span></div>
                             </div>
                         </div>
                     </div>
-                    @endif
                 </div>
 
-                {{-- Sidebar Checkout --}}
                 <div class="lg:col-span-5 relative animate-fade-in-up delay-200 sticky top-28 self-start">
                     <div class="space-y-5">
                         
@@ -484,7 +525,7 @@
                             <div class="pt-2 border-t border-slate-100">
                                 <div id="agree-section" class="mb-4">
                                     <label class="flex items-start gap-2 cursor-pointer">
-                                        <input type="checkbox" id="agree" x-model="formData.agreed" class="mt-0.5 w-4 h-4 text-iosBlue rounded border-slate-300 focus:ring-iosBlue">
+                                        <input type="checkbox" id="agree" x-model="formData.agreed" class="mt-0.5 w-4 h-4 text-iosBlue rounded border-slate-300 focus:ring-iosBlue" :class="{'border-red-500': formErrors.agreed}">
                                         <span class="text-[10px] text-slate-500 leading-snug">Saya menyetujui <span class="font-bold text-slate-700">Syarat & Ketentuan</span> pembelian.</span>
                                     </label>
                                 </div>
@@ -497,7 +538,6 @@
             </div>
         </main>
 
-        {{-- Modals --}}
         <div x-show="showErrorModal" class="fixed inset-0 z-[100] flex items-center justify-center px-4" x-cloak>
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" @click="showErrorModal = false"></div>
             <div class="bg-white rounded-[2rem] p-6 max-w-sm w-full relative z-10 shadow-2xl animate-pop-in text-center">
@@ -533,7 +573,6 @@
             </div>
         </div>
 
-        {{-- Sticky Footer --}}
         <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 sm:p-4 shadow-[0_-5px_30px_rgba(0,0,0,0.08)] z-50">
             <div class="max-w-screen-xl mx-auto px-4 sm:px-6">
                 <div class="grid grid-cols-12 gap-8 items-center">
@@ -573,4 +612,4 @@
 
     </div>
 </body>
-@endsection
+</html>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Testimonial extends Model
 {
@@ -22,4 +23,19 @@ class Testimonial extends Model
         'order' => 'integer',
         'rating' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::updating(function ($testimonial) {
+            if ($testimonial->isDirty('avatar') && $testimonial->getOriginal('avatar')) {
+                Storage::disk('public')->delete($testimonial->getOriginal('avatar'));
+            }
+        });
+
+        static::deleting(function ($testimonial) {
+            if ($testimonial->avatar) {
+                Storage::disk('public')->delete($testimonial->avatar);
+            }
+        });
+    }
 }

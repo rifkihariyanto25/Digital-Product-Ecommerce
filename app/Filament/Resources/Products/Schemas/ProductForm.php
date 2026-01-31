@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products\Schemas;
 
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -56,13 +57,85 @@ class ProductForm
                                 ->lt('price'),
                         ])->columns(2),
                     
-                    Step::make('Media & Status')
+                    Step::make('Media')
                         ->schema([
                             FileUpload::make('image')
-                                ->label('Gambar')
+                                ->label('Gambar Utama')
                                 ->image()
+                                ->disk('public')
                                 ->directory('products')
+                                ->required()
                                 ->columnSpanFull(),
+                            FileUpload::make('gallery')
+                                ->label('Galeri Foto')
+                                ->image()
+                                ->disk('public')
+                                ->directory('products/gallery')
+                                ->multiple()
+                                ->reorderable()
+                                ->maxFiles(10)
+                                ->columnSpanFull()
+                                ->helperText('Upload hingga 10 foto produk'),
+                        ]),
+                    
+                    Step::make('Detail Produk')
+                        ->schema([
+                            Repeater::make('testimonials')
+                                ->label('Testimoni Produk')
+                                ->schema([
+                                    TextInput::make('name')
+                                        ->label('Nama')
+                                        ->required(),
+                                    TextInput::make('position')
+                                        ->label('Jabatan/Perusahaan'),
+                                    Textarea::make('content')
+                                        ->label('Testimoni')
+                                        ->required()
+                                        ->rows(2),
+                                    TextInput::make('rating')
+                                        ->label('Rating')
+                                        ->numeric()
+                                        ->default(5)
+                                        ->minValue(1)
+                                        ->maxValue(5),
+                                ])
+                                ->columns(2)
+                                ->collapsed()
+                                ->columnSpanFull(),
+                            
+                            Repeater::make('faqs')
+                                ->label('FAQ Produk')
+                                ->schema([
+                                    TextInput::make('question')
+                                        ->label('Pertanyaan')
+                                        ->required()
+                                        ->columnSpanFull(),
+                                    Textarea::make('answer')
+                                        ->label('Jawaban')
+                                        ->required()
+                                        ->rows(3)
+                                        ->columnSpanFull(),
+                                ])
+                                ->collapsed()
+                                ->columnSpanFull(),
+                            
+                            Repeater::make('bonuses')
+                                ->label('Bonus/Keuntungan')
+                                ->schema([
+                                    TextInput::make('title')
+                                        ->label('Judul Bonus')
+                                        ->required(),
+                                    Textarea::make('description')
+                                        ->label('Deskripsi')
+                                        ->rows(2),
+                                ])
+                                ->columns(2)
+                                ->collapsed()
+                                ->columnSpanFull(),
+                        ]),
+                    
+                    Step::make('Status')
+                        ->schema([
                             Toggle::make('is_active')
                                 ->label('Aktif')
                                 ->default(true)
@@ -70,7 +143,8 @@ class ProductForm
                             Toggle::make('is_popular')
                                 ->label('Populer')
                                 ->default(false)
-                                ->inline(false),
+                                ->inline(false)
+                                ->helperText('Produk populer akan ditampilkan di section "Paling Laris"'),
                         ])->columns(2),
                 ])->columnSpanFull(),
             ]);

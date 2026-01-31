@@ -17,6 +17,7 @@ class TestimonialForm
                 FileUpload::make('avatar')
                     ->label('Foto')
                     ->image()
+                    ->disk('public')
                     ->directory('testimonials')
                     ->avatar()
                     ->columnSpanFull(),

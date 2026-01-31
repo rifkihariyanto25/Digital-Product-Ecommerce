@@ -16,6 +16,7 @@ class MediaCoverageForm
                 FileUpload::make('logo')
                     ->label('Logo Media')
                     ->image()
+                    ->disk('public')
                     ->directory('media-coverages')
                     ->required()
                     ->columnSpanFull(),

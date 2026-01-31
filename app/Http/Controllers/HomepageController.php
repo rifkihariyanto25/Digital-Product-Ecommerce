@@ -57,4 +57,12 @@ class HomepageController extends Controller
             'newProducts'
         ));
     }
+    
+    public function show($id)
+    {
+        $product = Product::with('category')->findOrFail($id);
+        $setting = Setting::first();
+        
+        return view('detail-produk', compact('product', 'setting'));
+    }
 }
