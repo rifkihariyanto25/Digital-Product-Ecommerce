@@ -36,6 +36,37 @@
 @endpush
 
 @section('content')
+@php
+    // Decode JSON fields
+    $bonuses = is_array($product->bonuses) ? $product->bonuses : (is_string($product->bonuses) ? json_decode($product->bonuses, true) : []);
+    $bonusValue = ($bonuses && is_array($bonuses) && count($bonuses) > 0) ? count($bonuses) * 100000 : 0;
+    
+    // Get data from URL params
+    $buyerName = request('name', '');
+    $buyerEmail = request('email', '');
+    $buyerPhone = request('phone', '');
+    $selectedPayment = request('payment', 'qris_all');
+    $selectedVoucher = request('voucher', '');
+    
+    // Find selected voucher details
+    $voucherAmount = 0;
+    if ($selectedVoucher) {
+        $voucher = $vouchers->where('kode_voucher', $selectedVoucher)->first();
+        if ($voucher) {
+            if ($voucher->tipe === 'persentase') {
+                $voucherAmount = round(($product->discount_price ?: $product->price) * ($voucher->nilai / 100));
+            } else {
+                $voucherAmount = $voucher->nilai;
+            }
+        }
+    }
+    
+    // Calculate prices
+    $basePrice = $product->discount_price ?: $product->price;
+    $uniqueCode = rand(100, 999);
+    $totalPrice = $basePrice + $uniqueCode - $voucherAmount;
+@endphp
+
 <body class="min-h-screen flex flex-col relative overflow-x-hidden selection:bg-iosBlue/20">
 
     <header class="fixed top-0 w-full z-50 glass-header transition-all duration-300">
@@ -50,7 +81,7 @@
             </a>
 
             <div class="flex items-center gap-2">
-                <a href="https://wa.me/628123456789" target="_blank" class="flex items-center gap-2 bg-slate-900 hover:bg-iosBlue text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all shadow-lg hover:shadow-xl active:scale-95">
+                <a href="https://wa.me/{{ $setting->nomor_whatsapp_owner ?? '628123456789' }}" target="_blank" class="flex items-center gap-2 bg-slate-900 hover:bg-iosBlue text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all shadow-lg hover:shadow-xl active:scale-95">
                     <i class="ri-whatsapp-line text-base sm:text-lg"></i>
                     <span class="hidden sm:inline">Bantuan</span>
                 </a>
@@ -284,7 +315,7 @@
                         <div class="p-5 sm:p-6 relative border-b border-gray-50">
                             <div class="flex gap-4 items-start">
                                 <div class="w-16 h-16 bg-gray-100 rounded-2xl overflow-hidden shrink-0 border border-gray-200 mt-1">
-                                    <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=400&h=400" class="w-full h-full object-cover">
+                                    <img :src="productImage" class="w-full h-full object-cover">
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <h3 class="font-heading font-bold text-slate-900 text-sm sm:text-base leading-snug mb-1 break-words">
@@ -347,7 +378,7 @@
                         </p>
                     </div>
 
-                    <a href="https://wa.me/628123456789" target="_blank" class="block bg-slate-900 hover:bg-iosBlue rounded-[2rem] p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer transition-colors duration-300">
+                    <a href="https://wa.me/{{ $setting->nomor_whatsapp_owner ?? '628123456789' }}" target="_blank" class="block bg-slate-900 hover:bg-iosBlue rounded-[2rem] p-6 text-white shadow-lg relative overflow-hidden group cursor-pointer transition-colors duration-300">
                         <div class="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:scale-110 transition-transform"></div>
                         <div class="flex items-center gap-4 relative z-10">
                             <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white border border-white/10">
@@ -577,14 +608,20 @@
             paymentStatus: 'UNPAID',
             isLoading: false, 
             timeLeft: 900, 
-            paymentMethod: 'qris', 
-            productName: 'Paket Lengkap S.O.P HRD & GA (Dokumen Ms Word & Excel Editable)', 
-            price: 299000, 
-            serviceFee: 2500, 
-            uniqueCode: 123, 
-            totalPrice: 0,
-            userEmail: 'budi.santoso@email.com', 
-            userPhone: '0812-3456-7890',
+            paymentMethod: '{{ $selectedPayment }}', 
+            productName: '{{ $product->name }}', 
+            productImage: '{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/400' }}',
+            price: {{ $basePrice }}, 
+            normalPrice: {{ $product->price }},
+            discount: {{ $product->price - $basePrice }},
+            serviceFee: 0, 
+            voucherAmount: {{ $voucherAmount }},
+            voucherCode: '{{ $selectedVoucher }}',
+            uniqueCode: {{ $uniqueCode }}, 
+            totalPrice: {{ $totalPrice }},
+            userEmail: '{{ $buyerEmail }}', 
+            userName: '{{ $buyerName }}',
+            userPhone: '{{ $buyerPhone }}',
             orderId: Math.floor(100000 + Math.random() * 900000),
             transactionTime: new Date().toLocaleString('id-ID', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'}) + ' WIB',
             showInvoice: false, 
@@ -595,7 +632,6 @@
             timerInterval: null,
 
             initPayment() {
-                this.totalPrice = this.price + this.serviceFee + this.uniqueCode;
                 this.startTimer();
             },
 
@@ -622,6 +658,53 @@
                     currency: 'IDR', 
                     minimumFractionDigits: 0 
                 }).format(number); 
+            },
+
+            copyText(text) {
+                const cleanText = text.toString().replace(/[^0-9]/g, '');
+                navigator.clipboard.writeText(cleanText).then(() => {
+                    this.showToast = true;
+                    this.toastMessage = 'Berhasil disalin!';
+                    setTimeout(() => { this.showToast = false; }, 3000);
+                });
+            },
+
+            simulatePayment() {
+                this.isLoading = true;
+                setTimeout(() => {
+                    this.paymentStatus = 'PAID';
+                    this.isLoading = false;
+                    clearInterval(this.timerInterval);
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                }, 2000);
+            },
+
+            downloadProductFile() {
+                alert('Download file produk: {{ $product->name }}');
+            },
+
+            getBankConfig(method) {
+                const configs = {
+                    'bca': { gradient: 'from-blue-600 to-blue-700', textColor: 'text-blue-100' },
+                    'bri': { gradient: 'from-blue-500 to-blue-600', textColor: 'text-blue-100' },
+                    'bni': { gradient: 'from-orange-500 to-orange-600', textColor: 'text-orange-100' },
+                    'mandiri': { gradient: 'from-yellow-500 to-yellow-600', textColor: 'text-yellow-100' },
+                    'bsi': { gradient: 'from-teal-600 to-teal-700', textColor: 'text-teal-100' },
+                    'cimb': { gradient: 'from-red-600 to-red-700', textColor: 'text-red-100' }
+                };
+                return configs[method] || configs['bca'];
+            },
+
+            getBankLogoColored(method) {
+                const logos = {
+                    'bca': 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg',
+                    'bri': 'https://upload.wikimedia.org/wikipedia/commons/6/68/BANK_BRI_logo.svg',
+                    'bni': 'https://upload.wikimedia.org/wikipedia/id/5/55/BNI_logo.svg',
+                    'mandiri': 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg',
+                    'bsi': 'https://upload.wikimedia.org/wikipedia/commons/a/a0/Bank_Syariah_Indonesia.svg',
+                    'cimb': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Bank_CIMB_Niaga_logo.svg'
+                };
+                return logos[method] || logos['bca'];
             }
         }
     }

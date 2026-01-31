@@ -75,4 +75,20 @@ class HomepageController extends Controller
         
         return view('detail-produk', compact('product', 'setting', 'generalFaqs', 'vouchers'));
     }
+    
+    public function checkout($id)
+    {
+        $product = Product::with('category')->findOrFail($id);
+        $setting = Setting::first();
+        
+        // Get active vouchers
+        $vouchers = Voucher::where('is_active', true)
+            ->where('berlaku_dari', '<=', now())
+            ->where('berlaku_sampai', '>=', now())
+            ->where('jumlah_terpakai', '<', \DB::raw('batas_penggunaan'))
+            ->orderByDesc('nilai')
+            ->get();
+        
+        return view('pembayaran', compact('product', 'setting', 'vouchers'));
+    }
 }

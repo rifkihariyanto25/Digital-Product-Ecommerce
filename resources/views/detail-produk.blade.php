@@ -162,15 +162,15 @@
                 return;
             }
 
-            let msg = 'Halo Admin, Saya ingin order:\n';
-            msg += 'Produk: ' + this.productName + '\n';
-            msg += 'Nama: ' + this.formData.name + '\n';
-            let nicePaymentName = this.selectedPaymentChannel.replace('va_', '').replace('_all', '').toUpperCase();
-            msg += 'Metode Bayar: ' + nicePaymentName + '\n';
-            msg += 'Total: ' + this.formatRupiah(this.grandTotal);
-            if(this.selectedVoucherCode) msg += '\nVoucher: ' + this.selectedVoucherCode;
-            
-            alert('Pesanan Diterima!\n\n' + msg + '\n\n(Akan diarahkan ke WhatsApp/Payment Gateway)');
+            // Redirect ke halaman pembayaran dengan data di URL params
+            const params = new URLSearchParams({
+                name: this.formData.name,
+                email: this.formData.email,
+                phone: this.formData.phone,
+                payment: this.selectedPaymentChannel,
+                voucher: this.selectedVoucherCode || ''
+            });
+            window.location.href = '{{ route('product.checkout', $product->id) }}?' + params.toString();
         },
 
         get grandTotal() { return Math.max(0, this.basePrice + this.uniqueCode - this.voucherAmount); },
@@ -315,15 +315,18 @@
 
                     {{-- Testimoni --}}
                     @if($testimonials && is_array($testimonials) && count($testimonials) > 0)
+                    @php
+                        $testimonialsData = array_map(function($testi) {
+                            return [
+                                'name' => $testi['name'] ?? '',
+                                'role' => $testi['position'] ?? 'Customer',
+                                'text' => $testi['content'] ?? '',
+                                'initial' => substr($testi['name'] ?? 'U', 0, 1)
+                            ];
+                        }, $testimonials);
+                    @endphp
                     <div x-data="{
-                            testimonials: {!! json_encode(array_map(function($testi) {
-                                return [
-                                    'name' => $testi['name'],
-                                    'role' => $testi['position'] ?? 'Customer',
-                                    'text' => $testi['content'],
-                                    'initial' => substr($testi['name'], 0, 1)
-                                ];
-                            }, $testimonials)) !!},
+                            testimonials: {{ json_encode($testimonialsData) }},
                             current: 0,
                             autoplay: null,
                             init() { this.startAutoplay(); },

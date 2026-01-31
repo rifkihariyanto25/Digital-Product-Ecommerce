@@ -7,6 +7,8 @@ Route::get('/', [HomepageController::class, 'index'])->name('homepage');
 
 Route::get('/product/{id}', [HomepageController::class, 'show'])->name('product.detail');
 
+Route::get('/product/{id}/checkout', [HomepageController::class, 'checkout'])->name('product.checkout');
+
 Route::get('/detail-produk', function () {
     return view('detail-produk');
 })->name('detail-produk');
