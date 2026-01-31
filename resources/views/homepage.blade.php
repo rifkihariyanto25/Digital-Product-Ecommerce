@@ -41,10 +41,17 @@
     <header class="fixed top-0 w-full z-50 glass-header transition-all duration-300">
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer" @click="resetSearch">
+                @if($setting && $setting->logo)
+                <img src="{{ asset('storage/' . $setting->logo) }}" 
+                     class="w-10 h-10 rounded-lg object-cover shadow-sm" alt="{{ $setting->nama_toko ?? 'Logo' }}">
+                @else
                 <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjRzyTdfjkBugSP3Ew_vmkaeMQKl0XnZVR83kFV0LtKJXC4gVF_WTGPS57iCampIjdlGU09l_Ct0hw_2Tx51GiHj5uWr6fTYqzJirf8qpAKhwW0AsM-pYcam74_l25KpFvShEYQdkJ-UnuJQsuiP7qa7Ek85k0MWaF0X0pHGmJZ2imL8IQK9ip5M9s2sW0/s16000/Templatenesia%20Logo.jpg" 
-                     class="w-10 h-10 rounded-lg object-cover shadow-sm" alt="Templatenesia Logo">
+                     class="w-10 h-10 rounded-lg object-cover shadow-sm" alt="Logo">
+                @endif
                 <div>
-                    <h1 class="font-heading font-extrabold text-xl text-slate-900 leading-none">Template<span class="text-iosPurple">nesia</span>.</h1>
+                    <h1 class="font-heading font-extrabold text-xl text-slate-900 leading-none">
+                        {{ $setting->nama_toko ?? 'Template' }}<span class="text-iosPurple">{{ $setting ? '' : 'nesia' }}</span>.
+                    </h1>
                 </div>
             </div>
 
@@ -63,12 +70,26 @@
             </div>
             
             <h2 class="font-heading text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
-                Profesionalisme Bisnis <br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-iosBlue to-iosPurple">Dimulai Dari Sini.</span>
+                @if($setting && $setting->nama_toko)
+                    {{ $setting->nama_toko }} <br>
+                @else
+                    Profesionalisme Bisnis <br>
+                @endif
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-iosBlue to-iosPurple">
+                    @if($setting && $setting->deskripsi_toko)
+                        {{ Str::limit($setting->deskripsi_toko, 50) }}
+                    @else
+                        Dimulai Dari Sini.
+                    @endif
+                </span>
             </h2>
             
             <p class="text-slate-500 text-lg max-w-2xl mx-auto leading-relaxed">
-                Pusat download dokumen SOP Perusahaan, KPI, dan Form Bisnis siap pakai (Editable). Hemat waktu, tingkatkan efisiensi operasional.
+                @if($setting && $setting->deskripsi_toko)
+                    {{ $setting->deskripsi_toko }}
+                @else
+                    Pusat download dokumen SOP Perusahaan, KPI, dan Form Bisnis siap pakai (Editable). Hemat waktu, tingkatkan efisiensi operasional.
+                @endif
             </p>
 
             <div class="relative max-w-2xl mx-auto mt-8 group">
@@ -180,13 +201,28 @@
         <section v-show="!searchQuery" class="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-soft">
             <h3 class="font-heading text-2xl font-bold text-center mb-10 text-slate-900">Standard Layanan Kami</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <div v-for="(ben, idx) in benefits" :key="idx" class="text-center group">
-                    <div class="w-16 h-16 mx-auto bg-blue-50 rounded-2xl flex items-center justify-center text-iosBlue text-3xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                        <i :class="ben.icon"></i>
+                @forelse($informationCards as $card)
+                <div class="text-center group">
+                    <div class="w-16 h-16 mx-auto bg-blue-50 rounded-2xl flex items-center justify-center text-iosBlue text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                        @if($card->icon)
+                            <img src="{{ asset('storage/' . $card->icon) }}" alt="{{ $card->title }}" class="w-full h-full object-cover">
+                        @else
+                            <i class="ri-information-line"></i>
+                        @endif
                     </div>
-                    <h4 class="font-bold text-slate-900 mb-1">@{{ ben.title }}</h4>
-                    <p class="text-xs text-slate-500">@{{ ben.desc }}</p>
+                    <h4 class="font-bold text-slate-900 mb-1">{{ $card->title }}</h4>
+                    <p class="text-xs text-slate-500">{{ $card->description }}</p>
+                    @if($card->link)
+                        <a href="{{ $card->link }}" target="_blank" class="text-xs text-iosBlue hover:underline mt-2 inline-block">
+                            <i class="ri-external-link-line"></i> Lihat
+                        </a>
+                    @endif
                 </div>
+                @empty
+                <div class="col-span-4 text-center text-slate-400 py-4">
+                    <p>Belum ada informasi card.</p>
+                </div>
+                @endforelse
             </div>
         </section>
 
@@ -232,58 +268,155 @@
             <div class="text-center mb-8">
                 <span class="text-sm font-bold text-slate-400 uppercase tracking-widest">Telah Diliput Oleh</span>
             </div>
+            @if($mediaCoverages->count() > 0)
             <div class="relative w-full mask-image-linear">
                 <div class="animate-scroll flex items-center gap-12">
-                    <img v-for="n in 20" :src="mediaLogos[(n-1) % mediaLogos.length]" class="h-8 md:h-10 w-auto transition-transform hover:scale-110 cursor-pointer">
+                    @foreach($mediaCoverages as $media)
+                        <img src="{{ asset('storage/' . $media->logo) }}" 
+                             alt="{{ $media->name }}"
+                             @if($media->url) onclick="window.open('{{ $media->url }}', '_blank')" @endif
+                             class="h-8 md:h-10 w-auto transition-transform hover:scale-110 {{ $media->url ? 'cursor-pointer' : '' }}">
+                    @endforeach
+                    @foreach($mediaCoverages as $media)
+                        <img src="{{ asset('storage/' . $media->logo) }}" 
+                             alt="{{ $media->name }}"
+                             @if($media->url) onclick="window.open('{{ $media->url }}', '_blank')" @endif
+                             class="h-8 md:h-10 w-auto transition-transform hover:scale-110 {{ $media->url ? 'cursor-pointer' : '' }}">
+                    @endforeach
                 </div>
             </div>
+            @else
+            <div class="text-center text-slate-400 py-4">
+                <p>Belum ada logo liputan.</p>
+            </div>
+            @endif
         </section>
 
         <section v-show="!searchQuery">
             <div class="text-center mb-10">
                 <h3 class="font-heading text-2xl font-bold text-slate-900">Apa Kata Mereka?</h3>
             </div>
+            @if($testimonials->count() > 0)
             <div class="relative w-full overflow-hidden mask-image-linear">
                 <div class="animate-scroll flex gap-6 pb-10">
-                    <div v-for="(testi, i) in [...testimonials, ...testimonials]" :key="i" class="min-w-[300px] md:min-w-[350px] bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all">
+                    @foreach($testimonials as $testi)
+                    <div class="min-w-[300px] md:min-w-[350px] bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-iosBlue to-cyan-400 flex items-center justify-center text-white font-bold text-sm">@{{ getInitials(testi.name) }}</div>
-                            <div><h4 class="font-bold text-slate-900 text-sm">@{{ testi.name }}</h4><div class="text-yellow-400 text-xs"><i class="fa-solid fa-star" v-for="s in 5"></i></div></div>
+                            @if($testi->avatar)
+                            <img src="{{ asset('storage/' . $testi->avatar) }}" alt="{{ $testi->name }}" class="w-10 h-10 rounded-full object-cover">
+                            @else
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-iosBlue to-cyan-400 flex items-center justify-center text-white font-bold text-sm">
+                                {{ strtoupper(substr($testi->name, 0, 2)) }}
+                            </div>
+                            @endif
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm">{{ $testi->name }}</h4>
+                                @if($testi->position || $testi->company)
+                                <p class="text-xs text-slate-500">{{ $testi->position }}{{ $testi->position && $testi->company ? ' di ' : '' }}{{ $testi->company }}</p>
+                                @endif
+                                <div class="text-yellow-400 text-xs">
+                                    @for($i = 0; $i < $testi->rating; $i++)
+                                        <i class="fa-solid fa-star"></i>
+                                    @endfor
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-slate-500 text-sm italic leading-relaxed">"@{{ testi.text }}"</p>
+                        <p class="text-slate-500 text-sm italic leading-relaxed">"{{ $testi->content }}"</p>
                     </div>
+                    @endforeach
+                    @foreach($testimonials as $testi)
+                    <div class="min-w-[300px] md:min-w-[350px] bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all">
+                        <div class="flex items-center gap-3 mb-4">
+                            @if($testi->avatar)
+                            <img src="{{ asset('storage/' . $testi->avatar) }}" alt="{{ $testi->name }}" class="w-10 h-10 rounded-full object-cover">
+                            @else
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-iosBlue to-cyan-400 flex items-center justify-center text-white font-bold text-sm">
+                                {{ strtoupper(substr($testi->name, 0, 2)) }}
+                            </div>
+                            @endif
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm">{{ $testi->name }}</h4>
+                                @if($testi->position || $testi->company)
+                                <p class="text-xs text-slate-500">{{ $testi->position }}{{ $testi->position && $testi->company ? ' di ' : '' }}{{ $testi->company }}</p>
+                                @endif
+                                <div class="text-yellow-400 text-xs">
+                                    @for($i = 0; $i < $testi->rating; $i++)
+                                        <i class="fa-solid fa-star"></i>
+                                    @endfor
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-slate-500 text-sm italic leading-relaxed">"{{ $testi->content }}"</p>
+                    </div>
+                    @endforeach
                 </div>
             </div>
+            @else
+            <div class="text-center text-slate-400 py-4">
+                <p>Belum ada testimoni.</p>
+            </div>
+            @endif
         </section>
 
         <section class="max-w-3xl mx-auto" v-show="!searchQuery">
             <div class="text-center mb-10">
                 <h3 class="font-heading text-2xl font-bold text-slate-900">Pertanyaan Umum</h3>
             </div>
+            @if($faqs->count() > 0)
             <div class="space-y-4">
-                <div v-for="(faq, index) in faqs" :key="index" class="bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-300" :class="{'shadow-lg border-blue-100': activeFaq === index, 'shadow-sm': activeFaq !== index}">
-                    <button @click="toggleFaq(index)" class="w-full flex items-center justify-between p-5 text-left font-semibold text-slate-800 hover:bg-gray-50 transition-colors">
-                        <span>@{{ faq.q }}</span>
-                        <i class="fa-solid fa-chevron-down transition-transform duration-300 text-iosBlue" :class="{'rotate-180': activeFaq === index}"></i>
+                @foreach($faqs as $index => $faq)
+                <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all duration-300" :class="{'shadow-lg border-blue-100': activeFaq === {{ $index }}, 'shadow-sm': activeFaq !== {{ $index }}}">
+                    <button @click="toggleFaq({{ $index }})" class="w-full flex items-center justify-between p-5 text-left font-semibold text-slate-800 hover:bg-gray-50 transition-colors">
+                        <span>{{ $faq->question }}</span>
+                        <i class="fa-solid fa-chevron-down transition-transform duration-300 text-iosBlue" :class="{'rotate-180': activeFaq === {{ $index }}}"></i>
                     </button>
-                    <div v-show="activeFaq === index" class="p-5 pt-0 text-sm text-slate-500 leading-relaxed border-t border-slate-50 border-dashed"><div class="mt-3">@{{ faq.a }}</div></div>
+                    <div v-show="activeFaq === {{ $index }}" class="p-5 pt-0 text-sm text-slate-500 leading-relaxed border-t border-slate-50 border-dashed"><div class="mt-3">{{ $faq->answer }}</div></div>
                 </div>
+                @endforeach
             </div>
+            @else
+            <div class="text-center text-slate-400 py-4">
+                <p>Belum ada FAQ.</p>
+            </div>
+            @endif
         </section>
 
         <section class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2.5rem] p-8 md:p-12 text-center relative overflow-hidden shadow-2xl transition-all hover:scale-[1.005] duration-500">
             <div class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
             <div class="relative z-10 flex flex-col items-center max-w-2xl mx-auto">
                 <div class="w-24 h-24 rounded-full border-4 border-slate-700 overflow-hidden mb-6 shadow-glow bg-slate-800">
-                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjRzyTdfjkBugSP3Ew_vmkaeMQKl0XnZVR83kFV0LtKJXC4gVF_WTGPS57iCampIjdlGU09l_Ct0hw_2Tx51GiHj5uWr6fTYqzJirf8qpAKhwW0AsM-pYcam74_l25KpFvShEYQdkJ-UnuJQsuiP7qa7Ek85k0MWaF0X0pHGmJZ2imL8IQK9ip5M9s2sW0/s16000/Templatenesia%20Logo.jpg" class="w-full h-full object-cover" alt="Profile">
+                    @if($setting && $setting->logo)
+                    <img src="{{ asset('storage/' . $setting->logo) }}" class="w-full h-full object-cover" alt="{{ $setting->nama_toko ?? 'Logo' }}">
+                    @else
+                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjRzyTdfjkBugSP3Ew_vmkaeMQKl0XnZVR83kFV0LtKJXC4gVF_WTGPS57iCampIjdlGU09l_Ct0hw_2Tx51GiHj5uWr6fTYqzJirf8qpAKhwW0AsM-pYcam74_l25KpFvShEYQdkJ-UnuJQsuiP7qa7Ek85k0MWaF0X0pHGmJZ2imL8IQK9ip5M9s2sW0/s16000/Templatenesia%20Logo.jpg" class="w-full h-full object-cover" alt="Logo">
+                    @endif
                 </div>
-                <h2 class="font-heading text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight">PT. Templatenesia Digital Solutions</h2>
-                <p class="text-slate-400 mb-10 text-sm leading-relaxed">Mitra terpercaya transformasi sistem manajemen perusahaan Anda. Konsultasi mudah, respon cepat, dan solusi tepat guna.</p>
+                <h2 class="font-heading text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight">
+                    {{ $setting->nama_toko ?? 'PT. Templatenesia Digital Solutions' }}
+                </h2>
+                <p class="text-slate-400 mb-10 text-sm leading-relaxed">
+                    {{ $setting->deskripsi_toko ?? 'Mitra terpercaya transformasi sistem manajemen perusahaan Anda. Konsultasi mudah, respon cepat, dan solusi tepat guna.' }}
+                </p>
                 <div class="grid grid-cols-4 md:grid-cols-8 gap-4 w-full justify-items-center">
-                    <a v-for="(soc, idx) in socials" :key="idx" :href="soc.link" class="flex flex-col items-center gap-2 group cursor-pointer w-full">
-                        <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white text-lg group-hover:bg-iosBlue group-hover:border-iosBlue group-hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm shadow-lg"><i :class="soc.icon"></i></div>
-                        <span class="text-[10px] text-slate-500 group-hover:text-white uppercase font-bold tracking-wider transition-colors">@{{ soc.name }}</span>
-                    </a>
+                    @php
+                        $socials = [
+                            ['name' => 'WA', 'icon' => 'ri-whatsapp-fill', 'link' => $setting && $setting->nomor_whatsapp_owner ? 'https://wa.me/' . $setting->nomor_whatsapp_owner : '#'],
+                            ['name' => 'FB', 'icon' => 'ri-facebook-fill', 'link' => $setting && $setting->facebook ? $setting->facebook : '#'],
+                            ['name' => 'IG', 'icon' => 'ri-instagram-fill', 'link' => $setting && $setting->instagram ? $setting->instagram : '#'],
+                            ['name' => 'TikTok', 'icon' => 'ri-tiktok-fill', 'link' => $setting && $setting->tiktok ? $setting->tiktok : '#'],
+                            ['name' => 'YT', 'icon' => 'ri-youtube-fill', 'link' => $setting && $setting->youtube ? $setting->youtube : '#'],
+                            ['name' => 'Email', 'icon' => 'ri-mail-fill', 'link' => $setting && $setting->email_toko ? 'mailto:' . $setting->email_toko : '#'],
+                            ['name' => 'Telp', 'icon' => 'ri-phone-fill', 'link' => $setting && $setting->nomor_telepon_toko ? 'tel:' . $setting->nomor_telepon_toko : '#'],
+                        ];
+                    @endphp
+                    @foreach($socials as $soc)
+                        @if($soc['link'] !== '#')
+                        <a href="{{ $soc['link'] }}" target="_blank" class="flex flex-col items-center gap-2 group cursor-pointer w-full">
+                            <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white text-lg group-hover:bg-iosBlue group-hover:border-iosBlue group-hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm shadow-lg"><i class="{{ $soc['icon'] }}"></i></div>
+                            <span class="text-[10px] text-slate-500 group-hover:text-white uppercase font-bold tracking-wider transition-colors">{{ $soc['name'] }}</span>
+                        </a>
+                        @endif
+                    @endforeach
                 </div>
             </div>
         </section>
@@ -300,7 +433,7 @@
     createApp({
         setup() {
             const searchQuery = ref('');
-            const whatsappLink = "https://wa.me/628123456789"; 
+            const whatsappLink = "{{ $setting && $setting->nomor_whatsapp_owner ? 'https://wa.me/' . $setting->nomor_whatsapp_owner : 'https://wa.me/628123456789' }}"; 
             const activeFaq = ref(0); 
 
             // 1. DATA PRODUK
@@ -378,16 +511,14 @@
             ];
 
             const formatPrice = (value) => value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            const getInitials = (name) => name.match(/(\b\S)?/g).join("").match(/(^\S|\S$)?/g).join("").toUpperCase();
             const toggleFaq = (index) => activeFaq.value = (activeFaq.value === index) ? null : index;
             const resetSearch = () => searchQuery.value = '';
 
             return {
                 searchQuery, whatsappLink, activeFaq,
-                benefits, popularProducts, newProducts, socials,
-                mediaLogos, testimonials, faqs,
+                popularProducts, newProducts,
                 filteredPopular, filteredNew,
-                formatPrice, getInitials, toggleFaq, resetSearch
+                formatPrice, toggleFaq, resetSearch
             }
         }
     }).mount('#app');
